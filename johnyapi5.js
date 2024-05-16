@@ -16,21 +16,33 @@ if (!fs.existsSync('media')) {
   fs.mkdirSync('media');
 }
 
+// URL base do servidor API
+const API_BASE_URL = 'http://localhost:8080'; // Substitua pelo URL correto do seu servidor API
+
 // Nome da instância
 const instanceName = 'JohnnyEVO';
 
 // Função para baixar e salvar mídias
-const downloadAndSaveMedia = async (messageId, mimetype, fileName, convertToMp4 = false) => {
+const downloadAndSaveMedia = async (messageId, mimetype, fileName, apikey, convertToMp4 = false) => {
   try {
     // Chamada para o endpoint para converter o conteúdo da mídia para Base64
-    const response = await axios.post(`/chat/getBase64FromMediaMessage/${instanceName}`, {
-      message: {
-        key: {
-          id: messageId
-        }
+    const response = await axios.post(
+      `${API_BASE_URL}/chat/getBase64FromMediaMessage/${instanceName}`,
+      {
+        message: {
+          key: {
+            id: messageId
+          }
+        },
+        convertToMp4: convertToMp4
       },
-      convertToMp4: convertToMp4
-    });
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': apikey
+        }
+      }
+    );
 
     // Extrair dados da resposta
     const { base64Content } = response.data;
@@ -46,23 +58,23 @@ const downloadAndSaveMedia = async (messageId, mimetype, fileName, convertToMp4 
 };
 
 // Função para imprimir mensagens específicas e baixar mídias
-const printMessageDetails = async (data) => {
+const printMessageDetails = async (data, apikey) => {
   if (data.message.audioMessage) {
     console.log("Audio Message:", JSON.stringify(data.message.audioMessage, null, 2));
-    await downloadAndSaveMedia(data.key.id, data.message.audioMessage.mimetype, data.key.id);
+    await downloadAndSaveMedia(data.key.id, data.message.audioMessage.mimetype, data.key.id, apikey);
   }
   if (data.message.imageMessage) {
     console.log("Image Message:", JSON.stringify(data.message.imageMessage, null, 2));
-    await downloadAndSaveMedia(data.key.id, data.message.imageMessage.mimetype, data.key.id);
+    await downloadAndSaveMedia(data.key.id, data.message.imageMessage.mimetype, data.key.id, apikey);
   }
   if (data.message.videoMessage) {
     console.log("Video Message:", JSON.stringify(data.message.videoMessage, null, 2));
     const convertToMp4 = data.message.videoMessage.mimetype !== 'video/mp4';
-    await downloadAndSaveMedia(data.key.id, data.message.videoMessage.mimetype, data.key.id, convertToMp4);
+    await downloadAndSaveMedia(data.key.id, data.message.videoMessage.mimetype, data.key.id, apikey, convertToMp4);
   }
   if (data.message.documentMessage) {
     console.log("Document Message:", JSON.stringify(data.message.documentMessage, null, 2));
-    await downloadAndSaveMedia(data.key.id, data.message.documentMessage.mimetype, data.key.id);
+    await downloadAndSaveMedia(data.key.id, data.message.documentMessage.mimetype, data.key.id, apikey);
   }
   if (data.message.messageContextInfo) {
     console.log("Message Context Info:", JSON.stringify(data.message.messageContextInfo, null, 2));
@@ -78,7 +90,8 @@ events.forEach(event => {
     console.log(`Evento recebido: ${event}`);
     if (event === 'messages-upsert') {
       const data = req.body.data;
-      await printMessageDetails(data);
+      const apikey = req.body.apikey; // Assumindo que o apikey é enviado no corpo da requisição
+      await printMessageDetails(data, apikey);
     } else {
       console.log(req.body);
     }
