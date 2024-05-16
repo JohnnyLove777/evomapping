@@ -3,6 +3,7 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 const mime = require('mime-types');
+const crypto = require('crypto');
 const app = express();
 
 // Middleware para processar JSON
@@ -17,51 +18,48 @@ if (!fs.existsSync('media')) {
 }
 
 // Lista de eventos suportados
-const events = [
-  'application-startup', 'qrcode-updated', 'connection-update',
-  'messages-set', 'messages-upsert', 'messages-update', 'messages-delete',
-  'send-message', 'contacts-set', 'contacts-upsert', 'contacts-update',
-  'presence-update', 'chats-set', 'chats-update', 'chats-upsert',
-  'chats-delete', 'groups-upsert', 'groups-update', 'group-participants-update',
-  'new-jwt'
-];
+const events = ['messages-upsert'];
+
+const downloadAndDecryptMedia = async (url, mimetype, fileName, mediaKey) => {
+  const extension = mime.extension(mimetype);
+  const filePath = path.join('media', `${fileName}.${extension}`);
+
+  // Download the encrypted file
+  const response = await axios({
+    url,
+    method: 'GET',
+    responseType: 'arraybuffer',
+  });
+
+  // Descrypt the media
+  const encryptedMedia = Buffer.from(response.data, 'binary');
+  const mediaKeyExpanded = crypto.createHash('sha256').update(mediaKey).digest();
+  const iv = mediaKeyExpanded.slice(0, 16);
+  const cipherKey = mediaKeyExpanded.slice(16, 48);
+
+  const decipher = crypto.createDecipheriv('aes-256-cbc', cipherKey, iv);
+  const decryptedMedia = Buffer.concat([decipher.update(encryptedMedia), decipher.final()]);
+
+  fs.writeFileSync(filePath, decryptedMedia);
+};
 
 // Função para imprimir mensagens específicas e baixar mídias
 const printMessageDetails = async (data) => {
-  const downloadAndSaveMedia = async (url, mimetype, fileName) => {
-    const extension = mime.extension(mimetype);
-    const filePath = path.join('media', `${fileName}.${extension}`);
-    const response = await axios({
-      url,
-      method: 'GET',
-      responseType: 'stream',
-    });
-    response.data.pipe(fs.createWriteStream(filePath));
-    return new Promise((resolve, reject) => {
-      response.data.on('end', () => {
-        resolve();
-      });
-      response.data.on('error', err => {
-        reject(err);
-      });
-    });
-  };
-
   if (data.message.audioMessage) {
     console.log("Audio Message:", JSON.stringify(data.message.audioMessage, null, 2));
-    await downloadAndSaveMedia(data.message.audioMessage.url, data.message.audioMessage.mimetype, data.key.id);
+    await downloadAndDecryptMedia(data.message.audioMessage.url, data.message.audioMessage.mimetype, data.key.id, data.message.audioMessage.mediaKey);
   }
   if (data.message.imageMessage) {
     console.log("Image Message:", JSON.stringify(data.message.imageMessage, null, 2));
-    await downloadAndSaveMedia(data.message.imageMessage.url, data.message.imageMessage.mimetype, data.key.id);
+    await downloadAndDecryptMedia(data.message.imageMessage.url, data.message.imageMessage.mimetype, data.key.id, data.message.imageMessage.mediaKey);
   }
   if (data.message.videoMessage) {
     console.log("Video Message:", JSON.stringify(data.message.videoMessage, null, 2));
-    await downloadAndSaveMedia(data.message.videoMessage.url, data.message.videoMessage.mimetype, data.key.id);
+    await downloadAndDecryptMedia(data.message.videoMessage.url, data.message.videoMessage.mimetype, data.key.id, data.message.videoMessage.mediaKey);
   }
   if (data.message.documentMessage) {
     console.log("Document Message:", JSON.stringify(data.message.documentMessage, null, 2));
-    await downloadAndSaveMedia(data.message.documentMessage.url, data.message.documentMessage.mimetype, data.key.id);
+    await downloadAndDecryptMedia(data.message.documentMessage.url, data.message.documentMessage.mimetype, data.key.id, data.message.documentMessage.mediaKey);
   }
   if (data.message.messageContextInfo) {
     console.log("Message Context Info:", JSON.stringify(data.message.messageContextInfo, null, 2));
