@@ -51,9 +51,9 @@ const downloadAndSaveMedia = async (messageId, mimetype, fileName, apikey, conve
     console.log('Resposta da API:', response.data);
 
     // Extrair dados da resposta
-    const base64Content = response.data.base64Content;
+    const base64Content = response.data.base64;
     if (!base64Content) {
-      throw new Error('base64Content não encontrado na resposta da API');
+      throw new Error('base64 não encontrado na resposta da API');
     }
     const extension = mime.extension(mimetype);
     const filePath = path.join('media', `${fileName}.${extension}`);
@@ -92,14 +92,7 @@ const printMessageDetails = async (data, apikey) => {
 };
 
 // Lista de eventos suportados
-const events = [
-  'application-startup', 'qrcode-updated', 'connection-update',
-  'messages-set', 'messages-upsert', 'messages-update', 'messages-delete',
-  'send-message', 'contacts-set', 'contacts-upsert', 'contacts-update',
-  'presence-update', 'chats-set', 'chats-update', 'chats-upsert',
-  'chats-delete', 'groups-upsert', 'groups-update', 'group-participants-update',
-  'new-jwt'
-];
+const events = ['messages-upsert'];
 
 // Criação dos endpoints para cada evento
 events.forEach(event => {
