@@ -3,7 +3,6 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 const mime = require('mime-types');
-const crypto = require('crypto');
 const app = express();
 
 // Middleware para processar JSON
@@ -17,57 +16,61 @@ if (!fs.existsSync('media')) {
   fs.mkdirSync('media');
 }
 
-// Lista de eventos suportados
-const events = ['messages-upsert'];
+// Nome da instância
+const instanceName = 'JohnnyEVO';
 
-// Função para imprimir mensagens específicas e baixar mídias
-const printMessageDetails = async (data) => {
-  const downloadAndDecryptMedia = async (url, mimetype, fileName, mediaKey, type) => {
+// Função para baixar e salvar mídias
+const downloadAndSaveMedia = async (messageId, mimetype, fileName, convertToMp4 = false) => {
+  try {
+    // Chamada para o endpoint para converter o conteúdo da mídia para Base64
+    const response = await axios.post(`/chat/getBase64FromMediaMessage/${instanceName}`, {
+      message: {
+        key: {
+          id: messageId
+        }
+      },
+      convertToMp4: convertToMp4
+    });
+
+    // Extrair dados da resposta
+    const { base64Content } = response.data;
     const extension = mime.extension(mimetype);
     const filePath = path.join('media', `${fileName}.${extension}`);
 
-    // Download the encrypted file
-    const response = await axios({
-      url,
-      method: 'GET',
-      responseType: 'arraybuffer',
-    });
+    // Decodificar o conteúdo Base64 e salvar no arquivo
+    const mediaBuffer = Buffer.from(base64Content, 'base64');
+    fs.writeFileSync(filePath, mediaBuffer);
+  } catch (error) {
+    console.error('Erro ao baixar e salvar mídia:', error.message);
+  }
+};
 
-    // Expand the media key
-    const mediaKeyBuffer = Buffer.from(mediaKey, 'base64');
-    const infoStr = `WhatsApp ${type.charAt(0).toUpperCase() + type.slice(1)} Keys`;
-    const expandedMediaKey = crypto.createHmac('sha256', mediaKeyBuffer).update(infoStr).digest();
-    const iv = expandedMediaKey.slice(0, 16);
-    const cipherKey = expandedMediaKey.slice(16, 48);
-
-    // Decrypt the media
-    const decipher = crypto.createDecipheriv('aes-256-cbc', cipherKey, iv);
-    const encryptedMedia = Buffer.from(response.data);
-    const decryptedMedia = Buffer.concat([decipher.update(encryptedMedia), decipher.final()]);
-
-    fs.writeFileSync(filePath, decryptedMedia);
-  };
-
+// Função para imprimir mensagens específicas e baixar mídias
+const printMessageDetails = async (data) => {
   if (data.message.audioMessage) {
     console.log("Audio Message:", JSON.stringify(data.message.audioMessage, null, 2));
-    await downloadAndDecryptMedia(data.message.audioMessage.url, data.message.audioMessage.mimetype, data.key.id, data.message.audioMessage.mediaKey, 'audio');
+    await downloadAndSaveMedia(data.key.id, data.message.audioMessage.mimetype, data.key.id);
   }
   if (data.message.imageMessage) {
     console.log("Image Message:", JSON.stringify(data.message.imageMessage, null, 2));
-    await downloadAndDecryptMedia(data.message.imageMessage.url, data.message.imageMessage.mimetype, data.key.id, data.message.imageMessage.mediaKey, 'image');
+    await downloadAndSaveMedia(data.key.id, data.message.imageMessage.mimetype, data.key.id);
   }
   if (data.message.videoMessage) {
     console.log("Video Message:", JSON.stringify(data.message.videoMessage, null, 2));
-    await downloadAndDecryptMedia(data.message.videoMessage.url, data.message.videoMessage.mimetype, data.key.id, data.message.videoMessage.mediaKey, 'video');
+    const convertToMp4 = data.message.videoMessage.mimetype !== 'video/mp4';
+    await downloadAndSaveMedia(data.key.id, data.message.videoMessage.mimetype, data.key.id, convertToMp4);
   }
   if (data.message.documentMessage) {
     console.log("Document Message:", JSON.stringify(data.message.documentMessage, null, 2));
-    await downloadAndDecryptMedia(data.message.documentMessage.url, data.message.documentMessage.mimetype, data.key.id, data.message.documentMessage.mediaKey, 'document');
+    await downloadAndSaveMedia(data.key.id, data.message.documentMessage.mimetype, data.key.id);
   }
   if (data.message.messageContextInfo) {
     console.log("Message Context Info:", JSON.stringify(data.message.messageContextInfo, null, 2));
   }
 };
+
+// Lista de eventos suportados
+const events = ['messages-upsert'];
 
 // Criação dos endpoints para cada evento
 events.forEach(event => {
