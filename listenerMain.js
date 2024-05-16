@@ -7,7 +7,8 @@ const {
   EnviarAudio,
   EnviarDocumento,
   EnviarReacao,
-  EnviarLocalizacao
+  EnviarLocalizacao,
+  downloadAndSaveMedia
 } = require('./messageFunctions');
 
 const instanceName = 'JohnnyEVO';
@@ -15,6 +16,15 @@ const instanceName = 'JohnnyEVO';
 // Middleware para processar JSON
 app.use(express.json());
 
+// Servir a pasta "media" estaticamente
+app.use('/media', express.static(path.join(__dirname, 'media')));
+
+// Cria a pasta "media" se não existir
+if (!fs.existsSync('media')) {
+  fs.mkdirSync('media');
+}
+
+// Listener de Mensagem Recebida
 app.post('/webhook/messages-upsert', async (req, res) => {
   const event = req.body;
 
@@ -62,6 +72,17 @@ app.post('/webhook/messages-upsert', async (req, res) => {
     res.sendStatus(200);
   }
 });
+
+// Listener de Mensagem Enviada
+app.post('/send-message', (req, res) => {
+    const message = req.body;
+  
+    console.log('Mensagem enviada recebida:', message);
+  
+    // Aqui você pode adicionar qualquer lógica adicional que desejar
+  
+    res.sendStatus(200);
+  });
 
 // Porta onde o servidor vai escutar
 const PORT = 3030;
