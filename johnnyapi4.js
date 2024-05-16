@@ -5,14 +5,7 @@ const app = express();
 app.use(express.json());
 
 // Lista de eventos suportados
-const events = [
-  'application-startup', 'qrcode-updated', 'connection-update',
-  'messages-set', 'messages-upsert', 'messages-update', 'messages-delete',
-  'send-message', 'contacts-set', 'contacts-upsert', 'contacts-update',
-  'presence-update', 'chats-set', 'chats-update', 'chats-upsert',
-  'chats-delete', 'groups-upsert', 'groups-update', 'group-participants-update',
-  'new-jwt'
-];
+const events = ['messages-upsert'];
 
 // Função para imprimir mensagens específicas
 const printMessageDetails = (data) => {
@@ -24,6 +17,9 @@ const printMessageDetails = (data) => {
   }
   if (data.message.videoMessage) {
     console.log("Video Message:", JSON.stringify(data.message.videoMessage, null, 2));
+  }
+  if (data.message.documentMessage) {
+    console.log("Document Message:", JSON.stringify(data.message.documentMessage, null, 2));
   }
   if (data.message.messageContextInfo) {
     console.log("Message Context Info:", JSON.stringify(data.message.messageContextInfo, null, 2));
