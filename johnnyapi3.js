@@ -202,31 +202,6 @@ app.post('/webhook/messages-upsert', async (req, res) => {
 
       console.log('Reação enviada com sucesso:', reactionResponse.data);
 
-      // Envia um adesivo
-      const stickerPostData = {
-        number: remoteJid,
-        options: {
-          delay: 1200,
-          presence: 'composing'
-        },
-        stickerMessage: {
-          image: 'https://s2-g1.glbimg.com/IMYOHWr1B4wi2rHTe7R4cLxQaLI=/0x0:384x384/600x0/smart/filters:gifv():strip_icc()/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2018/c/D/KLf6b3RpyygAYtwjO8dQ/palmeiras.gif'
-        }
-      };
-
-      const stickerResponse = await axios.post(
-        `http://localhost:8080/message/sendSticker/JohnnyEVO`,
-        stickerPostData,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': event.apikey
-          }
-        }
-      );
-
-      console.log('Adesivo enviado com sucesso:', stickerResponse.data);
-
       // Envia uma localização
       const locationPostData = {
         number: remoteJid,
