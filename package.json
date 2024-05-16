@@ -1,24 +1,24 @@
 {
-    "name": "whatsapp-listener",
-    "version": "1.0.0",
-    "description": "Projeto para ouvir mensagens recebidas no WhatsApp usando Evolution API e WebSockets",
-    "main": "listener.js",
-    "scripts": {
-      "start": "node listener.js"
-    },
-    "keywords": [
-      "websocket",
-      "socket.io",
-      "whatsapp",
-      "listener",
-      "evolution-api"
-    ],
-    "author": "Seu Nome",
-    "license": "ISC",
-    "dependencies": {
-      "socket.io-client": "^4.4.1",
-      "express": "^4.18.2",
-      "axios": "^1.3.4"
-    }
+  "name": "whatsapp-listener",
+  "version": "1.0.0",
+  "description": "Projeto para ouvir mensagens recebidas no WhatsApp usando Evolution API e WebSockets",
+  "main": "listener.js",
+  "scripts": {
+    "start": "node listener.js"
+  },
+  "keywords": [
+    "websocket",
+    "socket.io",
+    "whatsapp",
+    "listener",
+    "evolution-api"
+  ],
+  "author": "Seu Nome",
+  "license": "ISC",
+  "dependencies": {
+    "socket.io-client": "^4.4.1",
+    "express": "^4.18.2",
+    "axios": "^1.3.4",
+    "mime-types": "^2.1.35"
   }
-  
+}
