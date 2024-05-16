@@ -226,6 +226,16 @@ async function downloadAndSaveMedia(messageId, mimetype, fileName, apikey, insta
   }
 }
 
+async function isFromMe(event) {
+  return new Promise((resolve, reject) => {
+    if (event && event.data && event.data.key && typeof event.data.key.fromMe !== 'undefined') {
+      resolve(event.data.key.fromMe);
+    } else {
+      resolve(false); // Retorna false por padrão se a estrutura esperada não for encontrada
+    }
+  });
+}
+
 module.exports = {
   EnviarTexto,
   EnviarImagem,
@@ -234,5 +244,6 @@ module.exports = {
   EnviarDocumento,
   EnviarReacao,
   EnviarLocalizacao,
-  downloadAndSaveMedia
+  downloadAndSaveMedia,
+  isFromMe
 };
