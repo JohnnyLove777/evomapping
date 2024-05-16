@@ -11,6 +11,7 @@ app.post('/webhook/messages-upsert', async (req, res) => {
   const messageData = event.data;
   const conversation = messageData.message.conversation;
   const remoteJid = messageData.key.remoteJid;
+  const messageId = messageData.key.id; // ID da mensagem original para reações
 
   console.log(`Evento recebido: ${event.event}`);
   console.log(`Mensagem: ${conversation}`);
@@ -53,7 +54,7 @@ app.post('/webhook/messages-upsert', async (req, res) => {
         mediaMessage: {
           mediatype: 'image',
           caption: 'Aqui está uma imagem',
-          media: 'https://johnnylove.com.br/wp-content/uploads/2023/12/imagem_base.png'
+          media: 'https://johnnylove.com.br/wp-content/uploads/2024/05/OIG1.nRqKFmUtvlu2SJC69d.jpg'
         }
       };
 
@@ -70,22 +71,23 @@ app.post('/webhook/messages-upsert', async (req, res) => {
 
       console.log('Imagem enviada com sucesso:', imageResponse.data);
 
-      // Envia o áudio
-      const audioPostData = {
+      // Envia outra imagem
+      const imagePostData2 = {
         number: remoteJid,
         options: {
           delay: 1200,
           presence: 'composing'
         },
         mediaMessage: {
-          mediatype: 'audio',
-          media: 'https://johnnylove.com.br/wp-content/uploads/2024/01/typebotarrasta.ogg'
+          mediatype: 'image',
+          caption: 'Aqui está outra imagem com o método dinamico',
+          media: 'https://s3.typebot.io/public/workspaces/clsw9qe7b000b14ekulcmg8u5/typebots/clsw9rcai000di7ptvdbilasg/blocks/uqcak81acjhfukumj9pf2jic?v=1715874452937'
         }
       };
 
-      const audioResponse = await axios.post(
+      const imageResponse2 = await axios.post(
         `http://localhost:8080/message/sendMedia/JohnnyEVO`,
-        audioPostData,
+        imagePostData2,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -94,7 +96,7 @@ app.post('/webhook/messages-upsert', async (req, res) => {
         }
       );
 
-      console.log('Áudio enviado com sucesso:', audioResponse.data);
+      console.log('Imagem enviada com sucesso:', imageResponse2.data);
 
       // Envia o vídeo
       const videoPostData = {
@@ -106,7 +108,7 @@ app.post('/webhook/messages-upsert', async (req, res) => {
         mediaMessage: {
           mediatype: 'video',
           caption: 'Aqui está um vídeo',
-          media: 'https://johnnylove.com.br/wp-content/uploads/2023/11/vidtype.mp4'
+          media: 'https://johnnylove.com.br/wp-content/uploads/2024/01/vidjohnny01.mp4'
         }
       };
 
@@ -158,7 +160,7 @@ app.post('/webhook/messages-upsert', async (req, res) => {
         mediaMessage: {
           mediatype: 'document',
           media: 'https://johnnylove.com.br/wp-content/uploads/2023/11/Guia-Fantastico-1.0.pdf',
-          fileName: 'guiafantatico.pdf'
+          fileName: 'nossodoc.pdf'
         }
       };
 
@@ -174,6 +176,114 @@ app.post('/webhook/messages-upsert', async (req, res) => {
       );
 
       console.log('Documento enviado com sucesso:', documentResponse.data);
+
+      // Envia uma reação
+      const reactionPostData = {
+        reactionMessage: {
+          key: {
+            remoteJid: remoteJid,
+            fromMe: true,
+            id: messageId
+          },
+          reaction: '👍' // Emoji de reação
+        }
+      };
+
+      const reactionResponse = await axios.post(
+        `http://localhost:8080/message/sendReaction/JohnnyEVO`,
+        reactionPostData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': event.apikey
+          }
+        }
+      );
+
+      console.log('Reação enviada com sucesso:', reactionResponse.data);
+
+      // Envia um adesivo
+      const stickerPostData = {
+        number: remoteJid,
+        options: {
+          delay: 1200,
+          presence: 'composing'
+        },
+        stickerMessage: {
+          image: 'https://s2-g1.glbimg.com/IMYOHWr1B4wi2rHTe7R4cLxQaLI=/0x0:384x384/600x0/smart/filters:gifv():strip_icc()/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2018/c/D/KLf6b3RpyygAYtwjO8dQ/palmeiras.gif'
+        }
+      };
+
+      const stickerResponse = await axios.post(
+        `http://localhost:8080/message/sendSticker/JohnnyEVO`,
+        stickerPostData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': event.apikey
+          }
+        }
+      );
+
+      console.log('Adesivo enviado com sucesso:', stickerResponse.data);
+
+      // Envia uma localização
+      const locationPostData = {
+        number: remoteJid,
+        options: {
+          delay: 1200,
+          presence: 'composing'
+        },
+        locationMessage: {
+          name: 'Localização de exemplo',
+          address: 'Endereço de exemplo, 123',
+          latitude: -23.550520,
+          longitude: -46.633308
+        }
+      };
+
+      const locationResponse = await axios.post(
+        `http://localhost:8080/message/sendLocation/JohnnyEVO`,
+        locationPostData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': event.apikey
+          }
+        }
+      );
+
+      console.log('Localização enviada com sucesso:', locationResponse.data);
+
+      // Envia um contato
+      const contactPostData = {
+        number: remoteJid,
+        options: {
+          delay: 1200,
+          presence: 'composing'
+        },
+        contactMessage: [{
+          fullName: 'Contato de Exemplo',
+          wuid: '5511912790080@s.whatsapp.net',
+          phoneNumber: '11912790080',
+          organization: 'JohnnyZap',
+          email: 'johnnysoul99@gmail.com',
+          url: 'https://johnnylove.com.br'
+        }]
+      };
+
+      const contactResponse = await axios.post(
+        `http://localhost:8080/message/sendContact/JohnnyEVO`,
+        contactPostData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': event.apikey
+          }
+        }
+      );
+
+      console.log('Contato enviado com sucesso:', contactResponse.data);
 
       res.sendStatus(200);
     } catch (error) {
