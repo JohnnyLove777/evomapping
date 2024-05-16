@@ -2,7 +2,7 @@ module.exports = {
     apps: [
       {
         name: 'chatbot-server',
-        script: './main.js',
+        script: './listenerMain.js',
         instances: 1,
         autorestart: true,
         watch: false,
