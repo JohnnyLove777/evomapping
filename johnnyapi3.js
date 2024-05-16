@@ -182,7 +182,7 @@ app.post('/webhook/messages-upsert', async (req, res) => {
         reactionMessage: {
           key: {
             remoteJid: remoteJid,
-            fromMe: true,
+            fromMe: false,
             id: messageId
           },
           reaction: '👍' // Emoji de reação
