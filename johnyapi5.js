@@ -25,33 +25,43 @@ const instanceName = 'JohnnyEVO';
 // Função para baixar e salvar mídias
 const downloadAndSaveMedia = async (messageId, mimetype, fileName, apikey, convertToMp4 = false) => {
   try {
-    // Chamada para o endpoint para converter o conteúdo da mídia para Base64
-    const response = await axios.post(
-      `${API_BASE_URL}/chat/getBase64FromMediaMessage/${instanceName}`,
-      {
-        message: {
-          key: {
-            id: messageId
-          }
-        },
-        convertToMp4: convertToMp4
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': apikey
+    const data = JSON.stringify({
+      message: {
+        key: {
+          id: messageId
         }
-      }
-    );
+      },
+      convertToMp4: convertToMp4
+    });
+
+    const config = {
+      method: 'post',
+      maxBodyLength: Infinity,
+      url: `${API_BASE_URL}/chat/getBase64FromMediaMessage/${instanceName}`,
+      headers: { 
+        'Content-Type': 'application/json',
+        'apikey': apikey
+      },
+      data: data
+    };
+
+    const response = await axios.request(config);
+
+    // Verificar a resposta da API
+    console.log('Resposta da API:', response.data);
 
     // Extrair dados da resposta
-    const { base64Content } = response.data;
+    const base64Content = response.data.base64Content;
+    if (!base64Content) {
+      throw new Error('base64Content não encontrado na resposta da API');
+    }
     const extension = mime.extension(mimetype);
     const filePath = path.join('media', `${fileName}.${extension}`);
 
     // Decodificar o conteúdo Base64 e salvar no arquivo
     const mediaBuffer = Buffer.from(base64Content, 'base64');
     fs.writeFileSync(filePath, mediaBuffer);
+    console.log(`Mídia salva em: ${filePath}`);
   } catch (error) {
     console.error('Erro ao baixar e salvar mídia:', error.message);
   }
@@ -82,7 +92,14 @@ const printMessageDetails = async (data, apikey) => {
 };
 
 // Lista de eventos suportados
-const events = ['messages-upsert'];
+const events = [
+  'application-startup', 'qrcode-updated', 'connection-update',
+  'messages-set', 'messages-upsert', 'messages-update', 'messages-delete',
+  'send-message', 'contacts-set', 'contacts-upsert', 'contacts-update',
+  'presence-update', 'chats-set', 'chats-update', 'chats-upsert',
+  'chats-delete', 'groups-upsert', 'groups-update', 'group-participants-update',
+  'new-jwt'
+];
 
 // Criação dos endpoints para cada evento
 events.forEach(event => {
